@@ -458,7 +458,8 @@ path; there is no `fd_readdir`); anything else a newer `std` imports answers
   machine, written when
   one of them changes and exec'd at startup as quake.rc does. When a written file is closed, `wasi.js` sends it
   to the page, which keeps it in IndexedDB (`quake-rs`, store `files`, keyed
-  by path) and hands every kept file back at the next start. Without
+  by path; a save made with the player's own paks by its save space's key:
+  "Your files") and hands every kept file back at the next start. Without
   IndexedDB the page falls back to localStorage (`quake-rs.file.<path>`).
 - **Migration.** The old page kept saves as `quake-rs.sav.<name>` and the
   settings as `quake-rs.resolution`/`.viewsize`/`.extras` in localStorage. At
@@ -498,8 +499,20 @@ owns Scourge of Armagon or Dissolution of Eternity adds that pack's own
 `?game=hipnotic`/`?game=rogue` (the page's game picker switches there,
 once a pack is in reach — "The game picker", below).
 
+- **The button.** The bar's files button, before the source link: "load"
+  while there is nothing of theirs and nothing to choose (a press opens the
+  file picker), and otherwise the game that started — "shareware ▾",
+  "registered ▾", a mission pack's name — whose press opens a menu over the
+  view's corner: that game and whose files it is (yours, this server's),
+  the games to choose from ("The game picker", below), "add files…",
+  "remove my files", and a word that they are kept in this browser. A
+  click elsewhere, or Esc, closes it. The bar's other buttons
+  are icons — fullscreen, sound (with waves while it plays), keys — each
+  named for screen readers. Touch screens have no bar (touch.js).
 - **Adding.** Drop the files, or the whole Quake folder, anywhere on the
-  page, or pick them with the drawer's line ("Own Quake? …"). The page takes
+  page, or pick them with the bar's button or the drawer's line ("Own
+  Quake? …"), whose picker offers `.pak` files (the CD's tracks come in a
+  drop). The page takes
   `pak1.pak` or a mission pack's own `pak0.pak` — which game directory a
   dropped file means is read from its own path (`hipnotic/pak0.pak`,
   `Quake/rogue/pak0.pak`, however deep a whole-folder drop nests it;
@@ -522,12 +535,45 @@ once a pack is in reach — "The game picker", below).
   id1's or another pack's), which the worker never sees: the page hands the
   program the active game directory's own list of tracks (`-cdtracks
   2,3,…`, "CD music") and plays a track's file when the program asks for
-  it. The files stay in this browser until removed (the drawer's "remove
-  them", which removes every game directory's kept files at once).
+  it. The files stay in this browser until removed (the files menu's
+  "remove my files", or the drawer's "remove yours": every game
+  directory's kept paks and tracks at once; the saves stay, below).
+- **Save spaces.** The games saved while the player's own paks are in
+  effect are kept apart from the others. The program is not told — it
+  writes and reads `id1/s0.sav` as id's did — but the page keeps a save
+  under its space's key, `ns:<space>:id1/s0.sav`, and at start hands the
+  worker only this space's saves, under their plain paths. The space is 16
+  hex digits of a SHA-256 over the player's own paks in this game's search
+  path (id1's, and the mission pack's own while one plays), each named by
+  its path and its own SHA-256, worked out while the engine downloads. With
+  none of the player's own — shareware, or only a server's `files.json` —
+  it is the default space: the plain keys every save had before spaces, so
+  no save moved. So a registered game's saves are not listed beside the
+  shareware ones, a different `pak1.pak` (another version, a mod) has its
+  own, and removing the files leaves their saves, which come back with the
+  same files. In each browser, the first start with spaces, per game
+  directory, copies the plain saves into the space of the paks already kept
+  (a player who added pak1 before spaces made those saves with it), and
+  once the program has started with those files it leaves a marker
+  (`ns:-:<game dir>`, no space's key), so paks added later start an empty
+  space. When adding files changes the space and the one left had saves of
+  this game, the line under "click to start" says where they stay (the
+  shareware game, this server's, or the files before). A start that could
+  not read the store or hash
+  the paks keeps to the default space and copies nothing, and one the
+  program refused leaves no marker: the next start copies again (a copy
+  never replaces a key that is there). `config.cfg` has no space: the
+  settings are the player's, whatever they play. Accepted: a tab left open
+  from before spaces still saves under the plain keys, which a player with
+  their own paks then finds only in the default space (after the marker,
+  nothing copies them over). `verify_save_spaces.py` checks it all.
 - **Restarting.** The worker takes its files before it starts, so adding
   or removing files reloads the page: the engine and `pak0.pak` come from
   the HTTP cache, the saves and settings from storage. (A reload asks for
-  the click that starts audio again; adding files is rare enough.)
+  the click that starts audio again; adding files is rare enough.) Under
+  "click to start" the page then says what it started with ("Registered
+  Quake, episodes 1–4 — your files · added pak1.pak"), and the bar's button
+  names it.
 - **The program decides**, as id's did: `COM_CheckRegistered` compares
   `gfx/pop.lmp` with the table in `common.c` ("Playing registered
   version." on the console, the `registered` cvar the QuakeC's episode gates
@@ -574,9 +620,9 @@ reach at every stage:
 
 - **the start overlay**, under "click to start" / "tap to start", through
   the download too;
-- **the bar** under the view: "game", beside fullscreen · sound · keys,
-  opens them over the view's corner (a click elsewhere, or Esc, closes
-  them);
+- **the bar** under the view: the files button's menu ("Your files"),
+  beside fullscreen · sound · keys, over the view's corner (a click
+  elsewhere, or Esc, closes it);
 - **a phone's menu**: GAME, beside BACK while the menu is up (the attract
   demo's first tap, or MENU in a game, gets there), opens them in a panel
   over the menu (touch.js);
@@ -593,8 +639,8 @@ switch: a game directory is a command-line argument to a fresh program
 (`-hipnotic`), as it always was. `?game=` is the only state; nothing is kept
 that could disagree with it, so a bookmark starts there and Back returns to
 the game before. The reload keeps what the browser keeps (saves,
-`config.cfg`, the player's files); an unsaved game ends, which the bar's
-menu and the GAME panel say.
+`config.cfg`, the player's files); an unsaved game ends, which the GAME
+panel says (the bar's menu keeps to a line: a choice there is one click).
 
 **A press on a choice is only that** (`gameList`: the link stops its own
 `pointerdown`, `touchstart` and `click`). The user's report that on a phone the

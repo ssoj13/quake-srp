@@ -23,7 +23,7 @@ player's own drop still wins over it, per file; and a broken server pak1
 Then a mission pack in files.json ("The game picker"): a synthesized
 `hipnotic/pak0.pak` (the same `e1m1.bsp` trick, as `maps/hip1m1.bsp`) is
 never fetched playing plain id1, and the start overlay's picker offers it,
-the running game marked; so does the bar's "game" menu (Esc closes it, and
+the running game marked; so does the bar's files menu (Esc closes it, and
 only it), whose Scourge of Armagon reloads the page as `?game=hipnotic`,
 which then marks that one; it fetches only it (never `rogue/pak0.pak`,
 never offered here), no 404s, hip1m1 loads and plays its own CD tracks.
@@ -187,8 +187,9 @@ with sync_playwright() as p:
     st = pg.evaluate("quake.content.state()")
     check(st["registered"] is False and st["tracks"] == [] and st["paks"] == [], f"a fresh page is shareware, no files ({st['registered']}, {st['tracks']}, {st['paks']})")
     check(pg.evaluate("quake.cd.state().want") is None, "no music: no CD records")
-    check(not pg.is_visible("#gamePicker") and not pg.is_visible("#gameBtn"),
-          "a shareware-only deploy: no game picker, no game control in the bar")
+    check(not pg.is_visible("#gamePicker") and pg.inner_text("#loadLabel") == "load"
+          and pg.get_attribute("#loadBtn", "aria-controls") is None,
+          "a shareware-only deploy: no game picker; the bar's files button says load, no menu behind it")
 
     # --- Drop pak1.pak and three tracks (and a stray file) on the page.
     files = [["pak1.pak", b64(PAK1), ""], ["readme.txt", b64(b"hello"), "text/plain"]]
@@ -204,6 +205,7 @@ with sync_playwright() as p:
     check("id1/pak1.pak (2 files)" in st["path"] and "id1/pak0.pak (339 files)" in st["path"], "the search path: pak1 over pak0")
     call("exec registered")
     check('"registered" is "1"' in pg.evaluate("quake.text('console_text')"), "the console's registered is 1")
+    check(pg.inner_text("#loadLabel") == "registered ▾", f"the bar's files button names it ({pg.inner_text('#loadLabel')!r})")
 
     # --- The attract loop's demo1 forces CD track 2, looping.
     start_audio()
@@ -379,22 +381,25 @@ with sync_playwright() as p:
     picker = pg4.eval_on_selector("#gamePicker", "e => e.innerHTML")
     check("Scourge of Armagon" in picker and "?game=hipnotic" in picker, f"the picker offers it ({picker})")
     # Each choice a button (the running one marked, not a link), here and
-    # in the bar's "game" menu.
+    # in the bar's files menu.
     CHOICES = "e => [...e.querySelectorAll('.game')].map(g => [g.textContent, g.classList.contains('cur'), g.getAttribute('href')])"
     marked = pg4.eval_on_selector("#gamePicker", CHOICES)
     check(marked == [["Quake", True, None], ["Scourge of Armagon", False, "/index.html?game=hipnotic"]],
           f"the picker marks the running game, Quake ({marked})")
-    check(pg4.is_visible("#gameBtn") and not pg4.is_visible("#gameMenu"), "the bar has a game control, closed")
-    pg4.click("#gameBtn")
-    check(pg4.is_visible("#gameMenu") and pg4.eval_on_selector("#gameMenu", CHOICES) == marked,
-          f"\"game\" opens the same choices ({pg4.eval_on_selector('#gameMenu', CHOICES)})")
+    check(pg4.inner_text("#loadLabel") == "registered ▾" and not pg4.is_visible("#loadMenu"),
+          f"the bar's files button names the game, its menu closed ({pg4.inner_text('#loadLabel')!r})")
+    pg4.click("#loadBtn")
+    check(pg4.is_visible("#loadMenu") and pg4.eval_on_selector("#loadMenu", CHOICES) == marked,
+          f"it opens the same choices ({pg4.eval_on_selector('#loadMenu', CHOICES)})")
+    check("this server's files" in pg4.inner_text("#loadMenu") and not pg4.is_visible("#loadRemove"),
+          "whose files it says; nothing of the player's own to remove")
     pg4.screenshot(path=os.path.join(SHOTS, "verify_content_game_menu.png"))
     pg4.keyboard.press("Escape")
-    check(not pg4.is_visible("#gameMenu") and pg4.evaluate("!document.getElementById('overlay').classList.contains('hidden')")
+    check(not pg4.is_visible("#loadMenu") and pg4.evaluate("!document.getElementById('overlay').classList.contains('hidden')")
           and not pg4.evaluate("quake.state.flags & 1"),
           "Esc closes it, and nothing else (the start overlay still up, no game menu)")
-    pg4.click("#gameBtn")
-    pg4.click("#gameMenu a.game[data-game=hipnotic]")
+    pg4.click("#loadBtn")
+    pg4.click("#loadMenu a.game[data-game=hipnotic]")
     try:
         pg4.wait_for_url("**/index.html?game=hipnotic", timeout=10000)
         went = True
@@ -404,8 +409,9 @@ with sync_playwright() as p:
     ready(pg4)
     marked = pg4.eval_on_selector("#gamePicker", CHOICES)
     check(marked == [["Quake", False, "/index.html"], ["Scourge of Armagon", True, None]]
-          and pg4.eval_on_selector("#gameMenu", CHOICES) == marked,
-          f"the picker and the bar's menu now mark Scourge of Armagon ({marked})")
+          and pg4.eval_on_selector("#loadMenu", CHOICES) == marked
+          and pg4.inner_text("#loadLabel") == "Scourge of Armagon ▾",
+          f"the picker and the bar's menu now mark Scourge of Armagon, and the button names it ({marked})")
     pg4.screenshot(path=os.path.join(SHOTS, "verify_content_picker_hipnotic.png"))
     st = pg4.evaluate("quake.content.state()")
     check(st["game"] == "hipnotic" and st["paks"] == ["id1/pak1.pak", "hipnotic/pak0.pak"] and st["tracks"] == [2, 6],

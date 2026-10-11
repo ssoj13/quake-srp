@@ -384,6 +384,10 @@ with sync_playwright() as p:
     key("Alt+Enter")
     time.sleep(0.3)
     check("idcontrols: Alt+Enter is the game's, no fullscreen", not fs_on())
+    check("idcontrols: the playing line names the menu key instead",
+          pg.evaluate("statusPlaying()") == "playing — Esc for the menu")
+    check("...and the status line says it at once",
+          isolated.wait_until(pg, "document.getElementById('status').textContent === 'playing — Esc for the menu'", 3, raising=False))
     # vid_altenter switches it, and a config.cfg's old name for it, vid_fkey
     # (when the key was F), still does.
     pg.evaluate("quake.callLine('exec vid_fkey 1')")
@@ -391,6 +395,9 @@ with sync_playwright() as p:
     check("the old name vid_fkey sets vid_altenter",
           pg.evaluate("quake.text('cvar', 'vid_altenter')") == "1")
     check("the button's title names the key", pg.evaluate("fsBtn.title") == "fullscreen (Alt+Enter)")
+    check("so does the playing line", pg.evaluate("statusPlaying()") == "playing — Alt+Enter for fullscreen")
+    check("...on the status line too",
+          isolated.wait_until(pg, "document.getElementById('status').textContent === 'playing — Alt+Enter for fullscreen'", 3, raising=False))
     key("Alt+Enter")
     has_kb = pg.evaluate("!!(navigator.keyboard && navigator.keyboard.lock)")
     try:

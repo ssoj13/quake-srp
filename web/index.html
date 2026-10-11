@@ -110,7 +110,7 @@
   /* The game choices (gameList(), "Game directories" below): Quake and each
      mission pack this page can offer, as buttons that are plain links — a
      choice reloads the page with ?game= — in the start overlay, the bar's
-     "game" menu, touch.js's GAME panel and endscreen.js's quit screen
+     files menu, touch.js's GAME panel and endscreen.js's quit screen
      alike. The game running is filled, the others outlined; the one just
      chosen pulses until the new page replaces this one. */
   .games { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; }
@@ -128,8 +128,8 @@
   @keyframes going { to { background:rgba(181,131,47,.1); } }
   /* The start overlay's own: in #overlay itself, not #boot/#play, so it
      shows through both the download and the click-to-play prompt; gone with
-     the overlay at the first gesture (the bar's "game" and the menu's GAME
-     take over). Hidden by offerGames() until there is a mission pack. */
+     the overlay at the first gesture (the bar's files menu and the phone
+     menu's GAME take over). Hidden by offerGames() until there is a mission pack. */
   #gamePicker { margin-top:18px; max-width:100%; box-sizing:border-box; padding:0 16px; }
   #gamePicker.hidden { display:none; }
 
@@ -165,15 +165,37 @@
   /* The bar's link icons are drawn in the text's own colour, so they dim and
      light up with it. */
   a.link .ico { height:.85em; width:auto; fill:currentColor; vertical-align:-.05em; margin-right:.4em; }
-  /* The bar's "game" menu: the same choices, opening upward over the
-     view's right corner (the bar is the page's last line in the window) —
+  /* The bar's line icons (load, fullscreen, sound, keys), stroked in the
+     text's colour; fullscreen, sound and keys are the icon alone, their
+     names kept as hidden text (.vh) for screen readers and the checks. */
+  .sico { height:1.2em; width:auto; fill:none; stroke:currentColor; stroke-width:1.4; stroke-linecap:round;
+    stroke-linejoin:round; vertical-align:-.28em; }
+  .sico .f { fill:currentColor; stroke:none; }
+  #loadBtn .sico { margin-right:.4em; }
+  button.link.ib { padding:0 2px; }
+  #sndBtn .ico-on, #sndBtn.on .ico-off { display:none; }
+  #sndBtn.on .ico-on { display:inline; }
+  .vh { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+  /* The files button's menu (loadMenu): what is playing, the games to
+     choose from, adding and removing files — opening upward over the
+     view's right corner (the bar is the page's last line in the window),
      placed against the bar, not the button, so it stays over the view
      when a narrow window wraps the buttons to the bar's left. */
-  #gameMenu { position:absolute; right:0; bottom:calc(100% + 12px); z-index:5; width:max-content;
-    max-width:min(340px, 100%); box-sizing:border-box; padding:12px; border:1px solid var(--edge); border-radius:4px;
-    background:rgba(11,9,7,.97); box-shadow:0 8px 28px rgba(0,0,0,.7); text-align:left; }
-  #gameMenu .games { flex-direction:column; align-items:stretch; }
-  #gameMenu p { margin:10px 2px 0; font-size:11.5px; line-height:1.5; color:var(--faint); white-space:normal; }
+  #loadMenu { position:absolute; right:0; bottom:calc(100% + 12px); z-index:5; width:max-content;
+    max-width:min(360px, 100%); box-sizing:border-box; padding:12px; border:1px solid var(--edge); border-radius:4px;
+    background:rgba(11,9,7,.97); box-shadow:0 8px 28px rgba(0,0,0,.7); text-align:left; white-space:normal; }
+  #loadMenu .games { flex-direction:column; align-items:stretch; margin-top:10px; }
+  #loadMenu .now { margin:0 2px; font-size:12.5px; color:var(--ink); }
+  #loadMenu .acts { margin:10px 2px 0; }
+  #loadMenu .acts button + button { margin-left:16px; }
+  #loadMenu p { margin:10px 2px 0; font-size:11.5px; line-height:1.5; color:var(--faint); }
+  #loadMenu #loadMsg { color:#c98f6f; }
+  #loadMenu #loadMsg.ok { color:#a08c5a; }
+  /* After files were added or removed: what the page started with, under
+     "click to start" (gone with the overlay, at the first gesture). */
+  #fileNote { margin-top:14px; max-width:min(560px, 92%); font-size:12.5px; line-height:1.5; color:#a08c5a; }
+  #fileNote.err { color:#c98f6f; }
+  #fileNote.hidden { display:none; }
 
   /* The drawer: controls reference, console commands, shortcuts, credit. */
   #drawer { width:100%; box-sizing:border-box; max-width:920px; margin:22px auto 36px; padding:0 16px; text-align:left; }
@@ -222,6 +244,7 @@
           <div id="bootBar"><div id="bootFill"></div></div>
         </div>
         <div id="play" class="hidden">click (or press Enter) to start &nbsp;·&nbsp; then press any key for the menu</div>
+        <div id="fileNote" class="hidden"></div>
         <div id="gamePicker" class="hidden"></div>
       </div>
       <div id="lockChip" class="chip">click to capture mouse</div>
@@ -231,11 +254,10 @@
       <span id="mark">QUAKE<span class="sep">·</span>SRP</span>
       <span id="status">loading…</span>
       <span id="barBtns">
-        <span id="gameCtl" hidden><button id="gameBtn" class="link" aria-expanded="false" aria-controls="gameMenu"
-          title="play Quake or a mission pack (a reload)">game</button><div id="gameMenu" hidden></div></span>
-        <button id="fs" class="link" title="fullscreen">fullscreen</button>
-        <button id="sndBtn" class="link" title="play a test sound — in-game audio unlocks on your first click">sound off</button>
-        <button id="keysBtn" class="link" aria-expanded="false" aria-controls="drawer">keys</button>
+        <button id="fs" class="link ib" title="fullscreen"><svg class="sico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg><span class="vh">fullscreen</span></button>
+        <button id="sndBtn" class="link ib" title="play a test sound — in-game audio unlocks on your first click"><svg class="sico" viewBox="0 0 16 16" aria-hidden="true"><path class="f" d="M2 6h2.75L8.5 3v10L4.75 10H2z"/><path class="ico-off" d="M11 6l4 4M15 6l-4 4"/><path class="ico-on" d="M10.75 5.5a3.5 3.5 0 0 1 0 5M12.75 3.5a6.25 6.25 0 0 1 0 9"/></svg><span class="vh" id="sndLabel">sound off</span></button>
+        <button id="keysBtn" class="link ib" aria-expanded="false" aria-controls="drawer" title="keys, console commands and more"><svg class="sico" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.25" y="3.75" width="13.5" height="8.5" rx="1.5"/><path d="M4 6.75h.01M6.67 6.75h.01M9.33 6.75h.01M12 6.75h.01M5 9.5h6"/></svg><span class="vh">keys</span></button>
+        <span id="loadCtl"><button id="loadBtn" class="link" title="your own Quake files: pak1.pak for episodes 2–4, or a mission pack's — they stay in this browser"><svg class="sico" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.75 3.25h4.25l1.5 1.75h6.75v7.75H1.75z"/></svg><span id="loadLabel">load</span></button><div id="loadMenu" hidden></div></span>
         <a class="link" href="https://github.com/terrapapagalli1516/quake-srp" target="_blank" rel="noopener" title="the source code, on GitHub"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg>source</a>
         <a class="link" href="https://youtu.be/8TvVMzyxACc" target="_blank" rel="noopener" title="a six-minute video on how it works and what it changes"><svg class="ico" viewBox="0 0 28 20" aria-hidden="true"><path fill-rule="evenodd" d="M27.4 3.1A3.5 3.5 0 0 0 24.9.6C22.7 0 14 0 14 0S5.3 0 3.1.6A3.5 3.5 0 0 0 .6 3.1C0 5.3 0 10 0 10s0 4.7.6 6.9a3.5 3.5 0 0 0 2.5 2.5C5.3 20 14 20 14 20s8.7 0 10.9-.6a3.5 3.5 0 0 0 2.5-2.5C28 14.7 28 10 28 10s0-4.7-.6-6.9ZM11.2 14.3V5.7L18.5 10l-7.3 4.3Z"/></svg>explainer</a>
       </span>
@@ -298,13 +320,12 @@
       </div>
     </details>
     <section id="content">
-      <p id="contentLine">Own Quake? Add your copy's <code>id1/pak1.pak</code> for episodes 2–4, a mission
-        pack's own <code>hipnotic/pak0.pak</code> or <code>rogue/pak0.pak</code>, and the CD music
-        (<code>music/track02.ogg</code>…, or <code>hipnotic/music/track02.ogg</code> for its own): drop the files,
-        or the whole Quake folder, anywhere on this page, or
+      <p id="contentLine">Own Quake? Add your copy's <code>id1/pak1.pak</code> for episodes 2–4, or a mission
+        pack's own <code>hipnotic/pak0.pak</code> or <code>rogue/pak0.pak</code>: "load" under the view, or
+        drop the files, or the whole Quake folder, anywhere on this page, or
         <button id="addBtn" class="link">choose files</button>. They stay in this browser.</p>
       <p id="contentMsg" class="hidden"></p>
-      <input id="fileInput" type="file" multiple hidden>
+      <input id="fileInput" type="file" multiple hidden accept=".pak">
     </section>
     <p class="aside">Shortcuts: <button id="walkBtn" class="link">walk e1m1</button> · <button id="demoBtn" class="link">play demo1 (e1m3)</button></p>
     <p class="aside">id Software's 1996 Quake, ported to Rust from its GPL source and software-rendered in your browser — no GPU, no dependencies. Shareware episode included (id's original <a class="link" href="quake106.zip" download>quake106.zip</a>, 9.1 MB). <a class="link" href="https://github.com/terrapapagalli1516/quake-srp" target="_blank" rel="noopener">Source on GitHub</a>. Quake is a trademark of id Software. quake-srp is not affiliated with or endorsed by id Software.</p>
@@ -323,9 +344,15 @@ const statusEl = document.getElementById('status');
 // gesture reveals them), and a game being played (New Game, a load, the walk
 // button). The program's STATE record says which (ST.WALK), so the line
 // follows the game, not only the page's own buttons.
-const STATUS_ATTRACT = 'attract loop — press any key for the menu · Single Player > New Game to play';
+const STATUS_ATTRACT = 'demo — any key for the menu';
+// While playing, the one thing worth a line: the fullscreen key, as the
+// keyboard in front of the player names it (the view itself invites the
+// click that captures the mouse, and Esc is id's menu key). With the key
+// turned off (vid_altenter 0), the menu key instead.
+const FS_KEY = /mac/i.test((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '')
+  ? 'Option+Return' : 'Alt+Enter';
 const statusPlaying = () => touch ? 'playing — the MENU button for the menu'
-                                  : 'playing — Esc for the menu · click the view to capture the mouse';
+  : altEnterFullscreen() ? `playing — ${FS_KEY} for fullscreen` : 'playing — Esc for the menu';
 const canvas = document.getElementById('c');
 const wrap = document.getElementById('wrap');
 // A touch screen: a coarse primary pointer (a phone, a tablet), or `?touch`
@@ -342,9 +369,11 @@ const bootMsg = document.getElementById('bootMsg');
 const bootFill = document.getElementById('bootFill');
 const playEl = document.getElementById('play');
 const gamePickerEl = document.getElementById('gamePicker');
-const gameCtl = document.getElementById('gameCtl');
-const gameBtn = document.getElementById('gameBtn');
-const gameMenuEl = document.getElementById('gameMenu');
+const loadCtl = document.getElementById('loadCtl');
+const loadBtn = document.getElementById('loadBtn');
+const loadLabel = document.getElementById('loadLabel');
+const loadMenuEl = document.getElementById('loadMenu');
+const fileNoteEl = document.getElementById('fileNote');
 const lockChip = document.getElementById('lockChip');
 const fsHint = document.getElementById('fsHint');
 // The keys whose browser default (scrolling, or a click on a focused button)
@@ -417,11 +446,7 @@ function offerGames(have) {
   gamesOffered = shown;
   gamePickerEl.replaceChildren(gameList());
   gamePickerEl.classList.remove('hidden');
-  const note = document.createElement('p');
-  note.innerHTML = 'A choice reloads the page: the address says which game '
-    + '(<code>?game=hipnotic</code>, <code>?game=rogue</code>, none for Quake) — bookmark it. Saves stay; an unsaved game ends.';
-  gameMenuEl.replaceChildren(gameList(), note);
-  gameCtl.hidden = false;
+  syncLoadCtl();
 }
 // The choices, as a fresh element for wherever they show (the start
 // overlay, the bar's menu, touch.js's GAME panel, endscreen.js's quit
@@ -736,7 +761,7 @@ function startFromOverlay() {
 function syncStatus() {
   if (!firstGestureDone) return;
   if (inWalkMode()) statusEl.textContent = statusPlaying();
-  else if (statusEl.textContent === statusPlaying()) statusEl.textContent = STATUS_ATTRACT;
+  else if (statusEl.textContent.startsWith('playing — ')) statusEl.textContent = STATUS_ATTRACT;
 }
 
 // Physical keys, KeyboardEvent.code -> the unshifted US-ASCII keynum of the
@@ -801,9 +826,9 @@ function typedChar(e) {
 addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
 
-  // --- The bar's "game" menu, open: Esc closes it, and nothing else.
-  if (k === 'escape' && !gameMenuEl.hidden) {
-    showGameMenu(false);
+  // --- The bar's files menu, open: Esc closes it, and nothing else.
+  if (k === 'escape' && !loadMenuEl.hidden) {
+    showLoadMenu(false);
     e.preventDefault();
     return;
   }
@@ -960,7 +985,8 @@ function syncFullscreenTitle() {
   const key = altEnterFullscreen();
   if (key === fsTitleKey) return;
   fsTitleKey = key;
-  fsBtn.title = key ? 'fullscreen (Alt+Enter)' : 'fullscreen';
+  fsBtn.title = key ? `fullscreen (${FS_KEY})` : 'fullscreen';
+  syncStatus();   // the status line names the key too
 }
 // "keys" opens the drawer under the view: the controls, the console
 // commands, two shortcuts and the credit.
@@ -971,15 +997,18 @@ keysBtn.addEventListener('click', () => {
   keysBtn.setAttribute('aria-expanded', String(!drawerEl.hidden));
   if (!drawerEl.hidden) drawerEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 });
-// "game" (only with a mission pack to offer: offerGames) opens the same
-// choices as the start overlay's, over the view's corner; a click anywhere
-// else, or Esc, closes them.
-function showGameMenu(open) {
-  gameMenuEl.hidden = !open;
-  gameBtn.setAttribute('aria-expanded', String(open));
+// The files button (syncLoadCtl, under "Your Quake"): "load" opens the file
+// picker at once; once there is a game to name, it opens its menu over the
+// view's corner, which a click anywhere else, or Esc, closes.
+function showLoadMenu(open) {
+  loadMenuEl.hidden = !open;
+  if (loadBtn.hasAttribute('aria-controls')) loadBtn.setAttribute('aria-expanded', String(open));
 }
-gameBtn.addEventListener('click', () => showGameMenu(gameMenuEl.hidden));
-document.addEventListener('click', e => { if (!gameMenuEl.hidden && !gameCtl.contains(e.target)) showGameMenu(false); });
+loadBtn.addEventListener('click', () => {
+  if (loadBtn.hasAttribute('aria-controls')) showLoadMenu(loadMenuEl.hidden);
+  else fileInput.click();
+});
+document.addEventListener('click', e => { if (!loadMenuEl.hidden && !loadCtl.contains(e.target)) showLoadMenu(false); });
 
 // --- Esc in fullscreen ---------------------------------------------------------
 // The browser RESERVES Esc: with the mouse captured the first Esc only releases
@@ -1029,7 +1058,7 @@ function unlockEscape() {
 // where Esc is locked, Alt+Enter where it is the fullscreen key (vid_altenter),
 // else the browser's second Esc.
 function fsHintHtml(locked) {
-  const out = [locked && 'hold Esc', altEnterFullscreen() && 'Alt+Enter'].filter(Boolean);
+  const out = [locked && 'hold Esc', altEnterFullscreen() && FS_KEY].filter(Boolean);
   return out.length ? `Esc = menu &nbsp;·&nbsp; ${out.join(' or ')} = leave fullscreen`
     : 'Esc = menu &nbsp;·&nbsp; a second Esc = leave fullscreen';
 }
@@ -1079,7 +1108,7 @@ document.getElementById('demoBtn').addEventListener('click', () => {
   hideOverlayForever();
   statusEl.textContent = 'loading demo1 (e1m3)…';
   call('boot_demo').then(() => {
-    statusEl.textContent = "playing demo1 — id's recorded e1m3 run (demo2 and demo3 follow) · any key for the menu";
+    statusEl.textContent = 'playing demo1 — any key for the menu';
   });
 });
 
@@ -1457,7 +1486,7 @@ function cdGraph() {
   cd.el.addEventListener('error', () => {
     if (!cd.url) return;
     cd.error = `CD track ${cd.track}: this browser cannot play its file`;
-    contentShow(cd.error, false);
+    contentShow(cd.error, false, false);
   });
   cd.gain = audioCtx.createGain();
   cd.analyser = audioCtx.createAnalyser();
@@ -1680,7 +1709,7 @@ function updateSndUI() {
   if (on === sndShown) return;
   sndShown = on;
   cdSync();   // the CD plays in the context that just started (or stops with it)
-  sndBtn.textContent = on ? 'sound on' : 'sound off';
+  document.getElementById('sndLabel').textContent = on ? 'sound on' : 'sound off';
   sndBtn.classList.toggle('on', on);
 }
 updateSndUI();
@@ -1899,11 +1928,13 @@ const storage = {
       tx.oncomplete = tx.onerror = () => resolve();
     });
   },
-  // A file the program wrote or removed (wasi.js's 'fs' message).
+  // A file the program wrote or removed (wasi.js's 'fs' message), under its
+  // key in the store: a save goes to this start's save space (below).
   apply(m) {
-    if (m.op !== 'write') { this.remove(m.path); return; }
+    const key = storeKey(m.path);
+    if (m.op !== 'write') { this.remove(key); return; }
     this.persist();
-    this.put(m.path, m.data).catch(async e => {
+    this.put(key, m.data).catch(async e => {
       // The C's "ERROR: couldn't open." came at the write; this failure
       // comes after it, so it goes to the console on its own.
       console.error('storage', e);
@@ -1913,6 +1944,88 @@ const storage = {
   },
 };
 const FILE_PREFIX = 'quake-rs.file.';
+
+// --- Save spaces (web/PLATFORM.md, "Your files") --------------------------------
+// The saves made while the player's own paks are in effect are kept apart
+// from the others: a game saved with a registered pak1 is not listed beside
+// the shareware ones, nor the other way round, and it comes back when that
+// same pak does (removing the files leaves the saves). The program is not
+// told: it writes and reads id1/s0.sav as id's did, and the page keeps the
+// file under its space's key, "ns:<space>:id1/s0.sav", handing back at
+// start only this space's saves, under their plain paths. The space is a
+// hash of the player's own paks in this game's search path (id1's, and the
+// mission pack's while one plays), so the same files always find the same
+// saves. With none of the player's own (shareware, or only a server's own
+// files) it is the default space: the plain keys every save was kept under
+// before spaces, so nothing a player had moves.
+let saveSpace = '';
+let keptUnread = false;      // this start could not read the kept files (main)
+let spaceKnown = false;      // saveSpace is this start's (main has decided it)
+let keptKeys = [];           // every kept key at start, for the saves a space had
+let serverOffersPaks = false;  // this deploy's files.json offers paks for this game
+const SPACE_PREFIX = 'ns:';
+const isSavePath = (p) => /^(id1|hipnotic|rogue)\/[^/]+\.sav$/i.test(p);
+// The store's key for a file the program reads and writes at `path`.
+function storeKey(path) {
+  return saveSpace && isSavePath(path) ? `${SPACE_PREFIX}${saveSpace}:${path}` : path;
+}
+// The path a stored key's file has in this start's file system, or null
+// when it is another space's save (or the default space's, while this one
+// is not the default).
+function pathForKey(key) {
+  if (key.startsWith(SPACE_PREFIX)) return pathForSpace(key, saveSpace);
+  return saveSpace && isSavePath(key) ? null : key;
+}
+// The path of a stored key's file if it is `space`'s ('' the default
+// space's: a plain key), else null.
+function pathForSpace(key, space) {
+  if (!key.startsWith(SPACE_PREFIX)) return space ? null : key;
+  const rest = key.slice(SPACE_PREFIX.length), at = rest.indexOf(':');
+  return at > 0 && rest.slice(0, at) === space ? rest.slice(at + 1) : null;
+}
+// The save space of the player's own kept paks (`files`: storage.all()'s
+// map) that this game reads: '' when there are none. Each pak's SHA-256,
+// with its path, hashed together; 16 hex digits are plenty to tell a
+// player's few sets of files apart.
+async function spaceFor(files) {
+  const own = [...files.keys()].filter(k => isPakPath(k) && (k.startsWith('id1/') || k.startsWith(GAME_DIR + '/'))).sort();
+  if (!own.length) return '';
+  const hex = (buf) => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+  const lines = [];
+  for (const p of own) lines.push(`${p} ${hex(await crypto.subtle.digest('SHA-256', files.get(p)))}`);
+  return hex(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(lines.join('\n')))).slice(0, 16);
+}
+// Once per game directory in a browser, at the first start that has save
+// spaces: a player who kept their own paks before spaces existed made their
+// saves with them, under the plain keys — so copy those into the space the
+// paks make now, and the saves listed stay the ones they had (the plain
+// ones stay too, for the default space). Then a marker ("ns:-:<game dir>",
+// which is no space's key) says it is done, so a player who adds paks later
+// starts their space empty. The marker is left only once the program has
+// started with these files (markPlainSavesAdopted, from contentStarted): a
+// start that could not read the store or hash the paks copies nothing, and
+// one the program refused (files just added that it will not play) leaves
+// no marker, so the next start copies again — a copy never replaces a key
+// that is there.
+let adoptionMarker = null;   // the marker this start leaves, once the program has started
+let adoptedSaves = 0;        // saves this start copied
+async function adoptPlainSaves(files) {
+  const marker = `${SPACE_PREFIX}-:${GAME_DIR}`;
+  if (storage.fallback || files.has(marker)) return;
+  if (saveSpace) {
+    for (const [key, data] of [...files]) {
+      if (!key.startsWith(GAME_DIR + '/') || !isSavePath(key)) continue;
+      const to = `${SPACE_PREFIX}${saveSpace}:${key}`;
+      if (!files.has(to)) { await storage.put(to, data); files.set(to, data); adoptedSaves++; }
+    }
+  }
+  adoptionMarker = marker;
+}
+function markPlainSavesAdopted() {
+  if (!adoptionMarker) return;
+  storage.put(adoptionMarker, new Uint8Array(0)).catch(e => console.warn('[quake] the save spaces marker:', e));
+  adoptionMarker = null;
+}
 
 // What the console says when a file the program wrote could not be kept:
 // the browser's own name and words for the error, what to do about a full
@@ -1930,7 +2043,7 @@ async function keepFailure(path, e) {
     const mb = (n) => `${(n / 1048576).toFixed(1)} MB`;
     lines.push("The browser's storage for this site is full"
       + (est && est.quota ? ` (it uses ${mb(est.usage)} of the ${mb(est.quota)} it allows)` : '') + '.');
-    lines.push('Free some disk space, or remove the paks you added (in the drawer).');
+    lines.push('Free some disk space, or remove the paks you added (the files button, under the view).');
   }
   lines.push(`This session still has ${path}, but a reload loses it.`);
   return lines;
@@ -1992,14 +2105,14 @@ async function migrateLocalStorage(have) {
 // files (Steam and GOG ship id1's as music/track02.ogg…; a mission pack's
 // own, this page's own convention, as hipnotic/music/track02.ogg…, next to
 // its pak — "A server's own files" below lays a deploy out the same way).
-// They are dropped anywhere on the page — files, or the whole Quake folder
-// — or chosen with the drawer's button. The page checks that a pak is a
-// pak, keeps it in the game directory the program reads (the `files`
-// store: the worker gets it at start), keeps the music in a store of its
-// own (the drive gets a track at a time), and restarts the game: a reload,
-// since the worker takes its files before it starts. The program then
-// decides as id's did (COM_CheckRegistered, PR_LoadProgs); if it will not
-// start with what was just added, the page takes that out again and says
+// They are dropped anywhere on the page — files, or the whole Quake folder —
+// or chosen with the bar's files button or the drawer's. The page checks
+// that a pak is a pak, keeps it in the game directory the program reads (the
+// `files` store: the worker gets it at start), keeps the music in a store of
+// its own (the drive gets a track at a time), and restarts the game: a
+// reload, since the worker takes its files before it starts. The program
+// then decides as id's did (COM_CheckRegistered, PR_LoadProgs); if it will
+// not start with what was just added, the page takes that out again and says
 // why.
 //
 // Not supported, by design: the 2021 re-release's files (rerelease/…:
@@ -2012,8 +2125,9 @@ const MUSIC_TYPES = { ogg: 'audio/ogg', oga: 'audio/ogg', opus: 'audio/ogg; code
                       flac: 'audio/flac', wav: 'audio/wav', m4a: 'audio/mp4', aac: 'audio/aac', webm: 'audio/webm' };
 // paks/tracks are everything in effect; serverPaks/serverTracks are the
 // subset of those that came from the server's own files.json and were not
-// overridden by one of the player's own (below, "A server's own files").
-const content = { paks: [], tracks: [], registered: null, serverPaks: [], serverTracks: [] };
+// overridden by one of the player's own (below, "A server's own files");
+// searchPath is the program's `path` once it has started.
+const content = { paks: [], tracks: [], registered: null, serverPaks: [], serverTracks: [], searchPath: '' };
 const contentLine = document.getElementById('contentLine');
 const contentMsg = document.getElementById('contentMsg');
 const fileInput = document.getElementById('fileInput');
@@ -2030,10 +2144,89 @@ function contentNote() {
 function setContentNote(v) {
   try { if (v) localStorage.setItem(CONTENT_KEY, JSON.stringify(v)); else localStorage.removeItem(CONTENT_KEY); } catch (e) {}
 }
-function contentShow(text, ok) {
-  contentMsg.textContent = text;
-  contentMsg.classList.toggle('hidden', !text);
-  contentMsg.classList.toggle('ok', !!ok);
+// A word about the player's files — progress, what was left out and why —
+// in the drawer's line and (`menu`) the files menu's.
+const loadMsg = document.createElement('p');
+loadMsg.id = 'loadMsg';
+loadMsg.className = 'hidden';
+function contentShow(text, ok, menu = true) {
+  for (const el of menu ? [contentMsg, loadMsg] : [contentMsg]) {
+    el.textContent = text;
+    el.classList.toggle('hidden', !text);
+    el.classList.toggle('ok', !!ok);
+  }
+}
+
+// --- The bar's files button ----------------------------------------------------
+// One control for the player's own files and the game they make. "load"
+// while there is nothing of theirs and nothing to choose: a press opens the
+// file picker at once. Otherwise it names the game that started —
+// "shareware", "registered", a mission pack — and opens a menu: that game
+// and whose files it is, the games to choose from (gameList), adding files,
+// removing the player's own. Adding or removing restarts the page with the
+// files ("Your files"); what it started with shows under "click to start".
+function ownPaks() { return content.paks.filter(p => !content.serverPaks.includes(p)); }
+// What started: the mission pack ?game= asked for if its pak is in the
+// search path, else registered or shareware Quake. Before the program has
+// said (content.registered null), what the files promise.
+function playingName() {
+  const started = content.registered !== null;
+  const pack = GAME_PARAM && `${GAME_PARAM}/pak0.pak`;
+  if (pack && (started ? content.searchPath.includes(pack) : content.paks.includes(pack))) return GAME_NAMES[GAME_PARAM];
+  const registered = started ? content.registered : content.paks.includes('id1/pak1.pak');
+  return registered ? 'registered' : 'shareware';
+}
+// The game with whose files it is: "Registered Quake, episodes 1–4 — your files".
+function playingLine() {
+  const name = playingName();
+  const what = name === 'registered' ? 'Registered Quake, episodes 1–4'
+    : name === 'shareware' ? 'Shareware Quake, episode 1' : name;
+  const own = ownPaks().filter(p => p.startsWith('id1/') || p.startsWith(GAME_DIR + '/')).length;   // the ones this game reads
+  const server = content.serverPaks.length;
+  const whose = own && server ? "this server's files and yours" : own ? 'your files' : server ? "this server's files" : '';
+  return whose ? `${what} — ${whose}` : what;
+}
+function syncLoadCtl() {
+  const own = ownPaks().length > 0;
+  const named = own || content.serverPaks.length > 0 || !!gamesOffered;
+  loadLabel.replaceChildren(named ? playingName() : 'load');
+  if (named) {
+    const caret = document.createElement('span');
+    caret.setAttribute('aria-hidden', 'true');   // a screen reader hears the menu (aria-expanded), not a triangle
+    caret.textContent = ' ▾';
+    loadLabel.appendChild(caret);
+  }
+  if (named) {
+    loadBtn.setAttribute('aria-controls', 'loadMenu');
+    loadBtn.setAttribute('aria-expanded', String(!loadMenuEl.hidden));
+  } else {
+    loadBtn.removeAttribute('aria-controls');
+    loadBtn.removeAttribute('aria-expanded');
+  }
+  const now = document.createElement('p');
+  now.className = 'now';
+  now.textContent = playingLine();
+  const acts = document.createElement('div');
+  acts.className = 'acts';
+  const add = document.createElement('button');
+  add.className = 'link';
+  add.id = 'loadAdd';
+  add.textContent = 'add files…';
+  add.addEventListener('click', () => fileInput.click());
+  acts.appendChild(add);
+  if (own) {
+    const remove = document.createElement('button');
+    remove.className = 'link';
+    remove.id = 'loadRemove';
+    remove.textContent = 'remove my files';
+    remove.addEventListener('click', removeContent);
+    acts.appendChild(remove);
+  }
+  const fine = document.createElement('p');
+  fine.innerHTML = own ? 'Kept in this browser.'
+    : playingName() === 'shareware' ? '<code>pak1.pak</code> for episodes 2–4, or a mission pack\'s <code>pak0.pak</code>. Kept in this browser.'
+    : 'A mission pack\'s <code>pak0.pak</code>. Kept in this browser.';
+  loadMenuEl.replaceChildren(...[now, gameList(), acts, loadMsg, fine].filter(Boolean));
 }
 
 // common.c's CRC (CRC_Init 0xffff, CCITT polynomial, MSB first).
@@ -2202,8 +2395,9 @@ function planServerFiles(list, gameDir) {
 
 // Keep what the plan says and restart the game with it.
 async function addContent(items) {
-  if (storage.fallback) { contentShow('your files need IndexedDB, which this browser does not offer here', false); return; }
+  if (storage.fallback) { contentShow('your files need IndexedDB, which this browser does not offer here', false); showLoadMenu(true); return; }
   contentShow('reading your files…', true);
+  showLoadMenu(true);
   const plan = await planContent(items);
   if (!plan.paks.length && !plan.music.length) { contentShow(plan.notes.join('; ') || 'nothing to add', false); return; }
   try {
@@ -2219,7 +2413,8 @@ async function addContent(items) {
   // pak0.pak only with its directory shown.
   const added = plan.paks.map(p => p.path.startsWith('id1/') ? p.path.slice(4) : p.path);
   if (plan.music.length) added.push(`${plan.music.length} CD track${plan.music.length === 1 ? '' : 's'}`);
-  setContentNote({ pending: plan.paks.map(p => p.path), note: ['added ' + added.join(' and '), ...plan.notes].join('; ') });
+  setContentNote({ pending: plan.paks.map(p => p.path), note: ['added ' + added.join(' and '), ...plan.notes].join('; '),
+                   space: spaceKnown ? saveSpace : null });
   location.reload();
 }
 
@@ -2231,34 +2426,53 @@ async function removeContent() {
   for (const path of content.paks) if (!content.serverPaks.includes(path)) await storage.remove(path);
   await storage.musicClear();
   const back = content.serverPaks.length || content.serverTracks.length ? "this server's Quake again" : 'the shareware episode again';
-  setContentNote({ pending: [], note: `removed your files: ${back}`, ok: true });
+  setContentNote({ pending: [], note: `removed your files: ${back}`, ok: true, plain: true });
   location.reload();
 }
 
 // After a start: the program's verdict on the files, and the drawer's line.
 async function contentStarted() {
+  markPlainSavesAdopted();
   const note = contentNote();
   if (note && note.pending) setContentNote(null);
   let text = '';
   try { const r = await callLine('content'); content.registered = r.value === 1; text = r.text; } catch (e) {}
-  quake.contentPath = text;
+  quake.contentPath = content.searchPath = text;
   const have = content.paks.length || content.tracks.length;
   if (have) {
     const what = GAME_PARAM ? GAME_NAMES[GAME_PARAM]
       : content.registered ? 'registered Quake, episodes 1–4' : 'shareware Quake, episode 1';
-    const music = content.tracks.length ? `CD music: track${content.tracks.length === 1 ? '' : 's'} ${spans(content.tracks)}` : 'no CD music';
+    const music = content.tracks.length ? ` · CD music: track${content.tracks.length === 1 ? '' : 's'} ${spans(content.tracks)}` : '';
     const fromServer = content.serverPaks.length || content.serverTracks.length;
     // Removable: something of the player's own, over and above whatever
     // this server offers — the button goes away once it would do nothing.
     const removable = content.paks.some(p => !content.serverPaks.includes(p)) || content.tracks.some(t => !content.serverTracks.includes(t));
     const whose = fromServer ? (removable ? "This server's Quake, and yours:" : "This server's Quake:") : 'Your Quake:';
-    contentLine.innerHTML = `${whose} ${what} · ${music}. Drop more files to add or override them, or `
+    contentLine.innerHTML = `${whose} ${what}${music}. Drop more files to add or override them, or `
       + '<button id="addBtn" class="link">choose files</button>'
       + (removable ? ' · <button id="removeBtn" class="link">remove yours</button>' : '');
     document.getElementById('addBtn').addEventListener('click', () => fileInput.click());
     if (removable) document.getElementById('removeBtn').addEventListener('click', removeContent);
   }
-  if (note && note.note) contentShow(note.note, note.ok !== false && !note.error);
+  if (note && note.note) contentShow(note.note, note.ok !== false && !note.error, false);
+  syncLoadCtl();
+  // After files were added or removed: what the page started with, under
+  // "click to start".
+  // Paks just added start their own save space: the saves from before are
+  // not lost, and the line says where they are.
+  if (note && note.note) {
+    const failed = note.ok === false || !!note.error;
+    const left = typeof note.space === 'string' && note.space !== saveSpace && !adoptedSaves ? note.space : null;
+    const hadSaves = left !== null && keptKeys.some(k => {
+      const path = pathForSpace(k, left);
+      return path !== null && path.startsWith(GAME_DIR + '/') && isSavePath(path);
+    });
+    const earlier = hadSaves
+      ? ` · earlier saves stay with ${left ? 'the files before' : serverOffersPaks ? "this server's game" : 'the shareware game'}` : '';
+    fileNoteEl.textContent = failed || note.plain ? note.note : `${playingLine()} · ${note.note}${earlier}`;
+    fileNoteEl.classList.toggle('err', failed);
+    fileNoteEl.classList.remove('hidden');
+  }
 }
 // 2,3,4,5,9 as "2–5, 9".
 function spans(ns) {
@@ -2280,7 +2494,7 @@ async function contentRefused(e) {
   const why = engineError || (e && e.message) || String(e);
   if (note && note.pending && note.pending.length) {
     for (const path of note.pending) await storage.remove(path);
-    const names = note.pending.map(p => p.slice(4)).join(' and ');
+    const names = note.pending.map(p => p.startsWith('id1/') ? p.slice(4) : p).join(' and ');   // as addContent names them
     setContentNote({ pending: [], note: `could not play with ${names}, so it is out again: ${why}`, error: true, ok: false });
     location.reload();
     return true;
@@ -2334,6 +2548,7 @@ addEventListener('drop', async e => {
   addContent(await droppedItems(e.dataTransfer));
 });
 document.getElementById('addBtn').addEventListener('click', () => fileInput.click());
+syncLoadCtl();
 fileInput.addEventListener('change', () => {
   addContent([...fileInput.files].map(file => ({ file, path: file.webkitRelativePath || file.name })));
   fileInput.value = '';
@@ -2415,11 +2630,23 @@ async function main() {
     (async () => {
       await storage.open();
       await storage.migrateMusicKeys();
-      const have = new Map(await storage.all().catch(() => []));
+      const have = new Map(await storage.all().catch(e => { keptUnread = true; console.warn('[quake] storage:', e); return []; }));
       await migrateLocalStorage(have);
       return have;
     })(),
   ]);
+  // The saves this start lists (save spaces, under Storage), decided from
+  // the player's paks while the engine downloads: before the paks go to the
+  // worker, which takes them.
+  // A start that could not read the kept files, or hash the paks, keeps to
+  // the default space and copies nothing (adoptPlainSaves).
+  const spaceDecided = (async () => {
+    let sure = !keptUnread;
+    saveSpace = await spaceFor(files).catch(e => { console.warn('[quake] save space:', e); sure = false; return ''; });
+    if (sure) await adoptPlainSaves(files).catch(e => console.warn('[quake] keeping the saves for this space:', e));
+    keptKeys = [...files.keys()];
+    spaceKnown = true;
+  })();
   // The picker shows as soon as we know what's actually offered — during
   // the download below, not just once it finishes (GAME_DIR's own data
   // may turn out missing, in which case the engine falls back to plain
@@ -2427,6 +2654,13 @@ async function main() {
   offerGames(packsAvailable(manifestFiles, new Set(files.keys())));
   const server = planServerFiles(manifestFiles, GAME_DIR);
   serverTracks = server.tracks;
+  serverOffersPaks = server.paks.length > 0;
+  // What the files promise, for the bar's button while the engine
+  // downloads (the program's own word replaces it: contentStarted).
+  const keptPaks = [...files.keys()].filter(isPakPath);
+  content.paks = [...new Set([...keptPaks, ...server.paks.map(p => p.path)])];
+  content.serverPaks = server.paks.map(p => p.path).filter(p => !keptPaks.includes(p));
+  syncLoadCtl();
   const urls = ['quake.wasm', 'id1/pak0.pak', ...server.paks.map(p => p.path)];
   const hints = [0, 0, ...server.paks.map(p => p.size)];
   const [wasm, pak, ...serverPakBytes] = await download(urls, hints);
@@ -2482,10 +2716,13 @@ async function main() {
   // one) are the base; the player's own kept ones come after, so one of
   // theirs by the same name takes its place — the same rule a dropped
   // pak0 already got, now uniform for pak1 too. Everyone's are handed
-  // over, not copied.
-  const fileList = [['id1/pak0.pak', pak], ...serverFiles, ...files];
+  // over, not copied. The kept files go under their paths, this space's
+  // saves only.
+  await spaceDecided;
+  const kept = [...files].map(([key, data]) => [pathForKey(key), data]).filter(([path]) => path !== null);
+  const fileList = [['id1/pak0.pak', pak], ...serverFiles, ...kept];
   const handed = [wasm.buffer, pak.buffer, ...serverFiles.map(([, d]) => d.buffer),
-                  ...[...files].filter(([p]) => isPakPath(p)).map(([, d]) => d.buffer)];
+                  ...kept.filter(([p]) => isPakPath(p)).map(([, d]) => d.buffer)];
   worker.postMessage({ t: 'init', wasm: wasm.buffer, shared, audio: audioShared, files: fileList, args: commandLine(content.tracks), crash },
                      handed);
   // paks in effect beyond the baseline pak0 (never counted itself, unless
@@ -3248,9 +3485,12 @@ const quake = window.quake = {
   size: () => [W, H],
   // A kept file's text, as the page's storage holds it (null: none).
   kept: (path) => storage.all().then(files => {
-    const f = files.find(([p]) => p === path);
+    const key = storeKey(path);
+    const f = files.find(([p]) => p === key);
     return f ? new TextDecoder().decode(f[1]) : null;
   }),
+  // This start's save space ('' for the default: "Your files").
+  saveSpace: () => saveSpace,
   // The sound device, for the checks: the ring (ringState), the program's
   // counts (stats), the worklet's loudest sample since the last reset.
   audio: {
